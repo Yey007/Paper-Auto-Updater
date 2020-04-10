@@ -5,10 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.yey007</groupId>
-  <artifactId>PaperAutoUpdate</artifactId>
+  <artifactId>paperautoupdate</artifactId>
   <version>1.0</version>
 
-  <name>PaperAutoUpdate</name>
+  <name>paperautoupdate</name>
   <!-- FIXME change it to the project's website -->
   <url>https://github.com/Yey007/yey007.github.io</url>
 

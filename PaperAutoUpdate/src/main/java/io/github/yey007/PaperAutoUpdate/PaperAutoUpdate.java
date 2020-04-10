@@ -5,7 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
- public final class PaperAutoUpdate extends JavaPlugin
+ public final class paperautoupdate extends JavaPlugin
 {
     @Override
     public void onEnable() {
@@ -24,12 +24,12 @@ import org.bukkit.plugin.java.JavaPlugin;
   
         if(cmd.getName().equalsIgnoreCase("update")){
  
-            if(sender instanceof Player && sender.hasPermission("PaperAutoUpdate.update")) {
+            if(sender instanceof Player && sender.hasPermission("paperautoupdate.update")) {
 
                 getLogger().info("Update has been called");
                 return true;
 
-            } else if (sender instanceof Player && !sender.hasPermission("PaperAutoUpdate.update")){
+            } else if (sender instanceof Player && !sender.hasPermission("paperautoupdate.update")){
 
                 getLogger().info(this.getCommand("update").getPermissionMessage());
                 return false;
