@@ -5,12 +5,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
- public final class paperautoupdate extends JavaPlugin
+ public final class Updater extends JavaPlugin
 {
     @Override
     public void onEnable() {
      
-        getLogger().info("Paper auto updater is no longer running.");
+        getLogger().info("Paper auto updater is now running.");
 
     }
 

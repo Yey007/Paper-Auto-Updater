@@ -28,10 +28,10 @@
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
-      <version>1.12.2-R0.1-SNAPSHOT</version><!--change this value depending on the version or use LATEST-->
+      <version>LATEST</version><!--change this value depending on the version or use LATEST-->
       <type>jar</type>
       <scope>provided</scope>
-  </dependency>
+    </dependency>
   </dependencies>
 
   <build>

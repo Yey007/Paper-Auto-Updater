@@ -1,5 +1,5 @@
 name: paperautoupdate
-main: io.github.yey007
+main: io.github.yey007.paperautoupdate.Updater
 version: 1.0
 author: yey007
 description: Automatically updates paper.jar when there is a new version
@@ -8,12 +8,12 @@ commands:
     description: Updates paper.jar to latest version manually.
     usage: /update
     permission: paperautoupdate.update
-    permission-message: You don't have the permission for paperautoupdate.update
+    permission-message: You do not have the permission for paperautoupdate.update
 permissions:
   paperautoupdate.*:
     description: Gives access to auto update commands
     children:
-      paperautoupdate.update: op
+      paperautoupdate.update: true
   paperautoupdate.update:
     description: Gives access to update command
     default: op
