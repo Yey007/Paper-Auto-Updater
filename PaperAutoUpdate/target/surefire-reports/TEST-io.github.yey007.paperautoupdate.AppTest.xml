@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="io.github.yey007.paperautoupdate.AppTest" time="0.055" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="io.github.yey007.paperautoupdate.AppTest" time="0.074" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="sun.desktop" value="windows"/>
     <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
@@ -19,7 +19,7 @@
     <property name="user.country" value="US"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk1.8.0_241\jre\bin"/>
-    <property name="sun.java.command" value="C:\Users\utku_\AppData\Local\Temp\surefire938124729946232567\surefirebooter5429151779345723539.jar C:\Users\utku_\AppData\Local\Temp\surefire938124729946232567 2020-04-11T11-29-18_680-jvmRun1 surefire6827025768985104513tmp surefire_06502943263993228738tmp"/>
+    <property name="sun.java.command" value="C:\Users\utku_\AppData\Local\Temp\surefire3448944207067834150\surefirebooter1992799011246692054.jar C:\Users\utku_\AppData\Local\Temp\surefire3448944207067834150 2020-04-11T15-17-20_662-jvmRun1 surefire612064054905871871tmp surefire_05017621704032311023tmp"/>
     <property name="surefire.test.class.path" value="c:\Users\utku_\Documents\Auto Update Plugin\paperautoupdate\target\test-classes;c:\Users\utku_\Documents\Auto Update Plugin\paperautoupdate\target\classes;C:\Users\utku_\.m2\repository\junit\junit\4.11\junit-4.11.jar;C:\Users\utku_\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\utku_\.m2\repository\org\bukkit\bukkit\1.15.2-R0.1-SNAPSHOT\bukkit-1.15.2-R0.1-SNAPSHOT.jar;C:\Users\utku_\.m2\repository\commons-lang\commons-lang\2.6\commons-lang-2.6.jar;C:\Users\utku_\.m2\repository\com\google\guava\guava\21.0\guava-21.0.jar;C:\Users\utku_\.m2\repository\com\google\code\gson\gson\2.8.0\gson-2.8.0.jar;C:\Users\utku_\.m2\repository\org\yaml\snakeyaml\1.25\snakeyaml-1.25.jar;C:\Users\utku_\.m2\repository\com\destroystokyo\paper\paper-api\1.15.2-R0.1-SNAPSHOT\paper-api-1.15.2-R0.1-SNAPSHOT.jar;C:\Users\utku_\.m2\repository\com\google\code\findbugs\jsr305\1.3.9\jsr305-1.3.9.jar;C:\Users\utku_\.m2\repository\com\googlecode\json-simple\json-simple\1.1.1\json-simple-1.1.1.jar;C:\Users\utku_\.m2\repository\net\md-5\bungeecord-chat\1.15-SNAPSHOT\bungeecord-chat-1.15-SNAPSHOT.jar;C:\Users\utku_\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar;C:\Users\utku_\.m2\repository\org\ow2\asm\asm\7.3.1\asm-7.3.1.jar;C:\Users\utku_\.m2\repository\org\ow2\asm\asm-commons\7.3.1\asm-commons-7.3.1.jar;C:\Users\utku_\.m2\repository\org\ow2\asm\asm-tree\7.3.1\asm-tree-7.3.1.jar;C:\Users\utku_\.m2\repository\org\ow2\asm\asm-analysis\7.3.1\asm-analysis-7.3.1.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
     <property name="user.home" value="C:\Users\utku_"/>
@@ -32,7 +32,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.awt.graphicsenv" value="sun.awt.Win32GraphicsEnvironment"/>
-    <property name="surefire.real.class.path" value="C:\Users\utku_\AppData\Local\Temp\surefire938124729946232567\surefirebooter5429151779345723539.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\utku_\AppData\Local\Temp\surefire3448944207067834150\surefirebooter1992799011246692054.jar"/>
     <property name="sun.boot.class.path" value="C:\Program Files\Java\jdk1.8.0_241\jre\lib\resources.jar;C:\Program Files\Java\jdk1.8.0_241\jre\lib\rt.jar;C:\Program Files\Java\jdk1.8.0_241\jre\lib\sunrsasign.jar;C:\Program Files\Java\jdk1.8.0_241\jre\lib\jsse.jar;C:\Program Files\Java\jdk1.8.0_241\jre\lib\jce.jar;C:\Program Files\Java\jdk1.8.0_241\jre\lib\charsets.jar;C:\Program Files\Java\jdk1.8.0_241\jre\lib\jfr.jar;C:\Program Files\Java\jdk1.8.0_241\jre\classes"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
@@ -61,5 +61,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="52.0"/>
   </properties>
-  <testcase name="shouldAnswerWithTrue" classname="io.github.yey007.paperautoupdate.AppTest" time="0.003"/>
+  <testcase name="shouldAnswerWithTrue" classname="io.github.yey007.paperautoupdate.AppTest" time="0.004"/>
 </testsuite>

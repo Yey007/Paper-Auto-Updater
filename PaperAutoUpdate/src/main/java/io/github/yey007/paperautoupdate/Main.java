@@ -9,6 +9,7 @@ import java.net.*;
 import java.util.Map;
 import java.util.Scanner;
 
+import com.destroystokyo.paper.util.VersionFetcher.DummyVersionFetcher;
 import com.google.gson.JsonObject;
 
 import java.io.*;
@@ -17,11 +18,13 @@ import org.json.simple.parser.JSONParser;
 
 public final class Main extends JavaPlugin {
 
-    public Updater updater = new Updater();
+    Updater updater = new Updater();
+    Creator create = new Creator();
 
     @Override
     public void onEnable() {
         getLogger().info("PaperAutoUpdate is now running.");
+        create.CreateFiles();
     }
 
     @Override
@@ -60,27 +63,17 @@ class Updater {
 
     void Update() {
 
-        /*
-         * DummyVersionFetcher fetcher = new DummyVersionFetcher();
-         * 
-         * Boolean behind =
-         * fetcher.getVersionMessage(Bukkit.getVersion()).contains("behind"); String
-         * behindString; String versionMessage =
-         * fetcher.getVersionMessage(Bukkit.getVersion());
-         * 
-         * if (behind == true) {
-         * 
-         * behindString = "true";
-         * 
-         * } else {
-         * 
-         * behindString = "false"; }
-         * 
-         * //behindString = "lmao";
-         */
+        DummyVersionFetcher fetcher = new DummyVersionFetcher();
 
-        // Bukkit.getLogger().info(behindString);
-        // Bukkit.getLogger().info(versionMessage);
+        Boolean behind = fetcher.getVersionMessage(Bukkit.getVersion()).contains("behind");
+        String behindString;
+        String versionMessage = fetcher.getVersionMessage(Bukkit.getVersion());
+        Bukkit.getLogger().info(Bukkit.getVersion().toString());
+
+        // find integer (version)
+        StringBuffer sb = new StringBuffer(versionMessage);
+
+        // get latest version
         URLReader reader = new URLReader();
 
         Bukkit.getLogger().info("Checking for new version...");
@@ -109,6 +102,8 @@ class URLReader {
             content = scanner.next();
             scanner.close();
         } catch (Exception ex) {
+            Bukkit.getLogger()
+                    .warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
             ex.printStackTrace();
         }
 
@@ -116,16 +111,64 @@ class URLReader {
         JSONObject json = (JSONObject) parser.parse(content);
 
         try {
-
             Map builds = (Map) json.get("builds");
             String latest = (String) builds.get("latest");
             latestInt = Integer.parseInt(latest);
-
         } catch (Exception e) {
+            Bukkit.getLogger().warning("Something went wrong while parsing a JSON");
             e.printStackTrace();
         }
 
         return latestInt;
     }
+}
 
+class Creator {
+    public void CreateFiles() {
+
+        File directory = new File("plugins\\PaperAutoUpdate");
+        File config = new File(directory, "config.yml");
+        File renamer = new File(directory, "renamer.bat");
+        
+
+        if (directory.exists() == false) {
+
+            try {
+                directory.mkdirs();
+            } catch (Exception e) {
+                Bukkit.getLogger().warning("Directory creation failed!");
+                e.printStackTrace();
+            }
+
+            try {
+                renamer.createNewFile();
+            } catch (IOException e) {
+                Bukkit.getLogger().warning("Renamer creation failed!");
+                e.printStackTrace();
+            }
+
+            try {
+                config.createNewFile();
+            } catch (IOException e) {
+                Bukkit.getLogger().warning("Config creation failed!");
+                e.printStackTrace();
+            }
+            
+        } else {
+
+            if (config.exists())
+            {
+                Bukkit.getLogger().info("Configuration file found!");
+            }
+            else {
+                try {
+                    config.createNewFile();
+                } catch (IOException e) {
+                    Bukkit.getLogger().warning("Config creation failed!");
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
 }
