@@ -5,26 +5,27 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
-import java.net.*;
-import java.util.Map;
-import java.util.Scanner;
-
 import com.destroystokyo.paper.util.VersionFetcher.DummyVersionFetcher;
-import com.google.gson.JsonObject;
 
+import java.net.*;
 import java.io.*;
+import java.util.*;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 
 public final class Main extends JavaPlugin {
 
     Updater updater = new Updater();
-    Creator create = new Creator();
+    FileBoi fileBoi = new FileBoi();
 
     @Override
     public void onEnable() {
         getLogger().info("PaperAutoUpdate is now running.");
-        create.CreateFiles();
+        fileBoi.CreateFiles();
     }
 
     @Override
@@ -123,13 +124,13 @@ class URLReader {
     }
 }
 
-class Creator {
-    public void CreateFiles() {
+class FileBoi {
 
-        File directory = new File("plugins\\PaperAutoUpdate");
-        File config = new File(directory, "config.yml");
-        File renamer = new File(directory, "renamer.bat");
-        
+    File directory = new File("plugins\\PaperAutoUpdate");
+    File config = new File(directory, "config.yml");
+    File renamer = new File(directory, "renamer.bat");
+
+    public void CreateFiles() {
 
         if (directory.exists() == false) {
 
@@ -149,26 +150,61 @@ class Creator {
 
             try {
                 config.createNewFile();
+                WriteConfig();
+                Bukkit.getLogger().info(ReadConfig().PathToJar);
+                Bukkit.getLogger().info(ReadConfig().PathToStartup);
             } catch (IOException e) {
                 Bukkit.getLogger().warning("Config creation failed!");
                 e.printStackTrace();
             }
-            
+
         } else {
 
-            if (config.exists())
-            {
+            if (config.exists()) {
                 Bukkit.getLogger().info("Configuration file found!");
-            }
-            else {
+            } else {
                 try {
                     config.createNewFile();
+                    WriteConfig();
+                    Bukkit.getLogger().info(ReadConfig().PathToJar);
+                    Bukkit.getLogger().info(ReadConfig().PathToStartup);
                 } catch (IOException e) {
-                    Bukkit.getLogger().warning("Config creation failed!");
+                    Bukkit.getLogger().warning("Configuration file creation failed!");
+                    e.printStackTrace();
+                }
+            }
+
+            if (renamer.exists()) {
+                Bukkit.getLogger().info("Renamer script found!");
+            } else {
+                try {
+                    renamer.createNewFile();
+                } catch (IOException e) {
+                    Bukkit.getLogger().warning("Renamer script creation failed!");
                     e.printStackTrace();
                 }
             }
 
         }
     }
+
+    void WriteConfig() {
+        try {
+            FileWriter fw = new FileWriter(config);
+            fw.write("startupScriptPath: C:\\Server\\start.bat \n");
+            fw.write("serverJarFilePath: C:\\Server\\paper.jar \n");
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    ConfigFile ReadConfig() {
+        ConfigFile output = new ConfigFile();
+        Yaml yaml = new Yaml(new Constructor(ConfigFile.class));
+        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(config.getPath());
+        output = yaml.load(inputStream);
+        return output;
+    }
+
 }

@@ -6,7 +6,7 @@
 
   <groupId>io.github.yey007</groupId>
   <artifactId>paperautoupdate</artifactId>
-  <version>1.1.2</version>
+  <version>1.1.5</version>
 
   <name>paperautoupdate</name>
   <!-- FIXME change it to the project's website -->
@@ -37,7 +37,12 @@
       <artifactId>paper-api</artifactId>
       <version>1.15.2-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
-   </dependency>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>1.21</version>            
+    </dependency>
   </dependencies>
 
   <build>
