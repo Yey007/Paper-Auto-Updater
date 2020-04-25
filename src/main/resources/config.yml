@@ -2,3 +2,4 @@ PathToStartup: C:\Server\start.bat
 PathToJar: C:\Server\paper.jar
 PathToServer: C:\Server
 RestartAfterUpdate: true
+SecondsBetweenUpdateChecks: 1800

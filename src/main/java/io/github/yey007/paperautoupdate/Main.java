@@ -2,8 +2,11 @@ package io.github.yey007.paperautoupdate;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.Bukkit;
 
 import java.io.BufferedInputStream;
@@ -23,7 +26,7 @@ public final class Main extends JavaPlugin {
     Updater updater = new Updater();
     ConfigFile configuration;
     FileBoi fileBoi = new FileBoi(this);
-    public static Boolean updateNeeded = true;
+    public static Boolean updateNeeded = false;
 
     @Override
     public void onEnable() {
@@ -31,6 +34,17 @@ public final class Main extends JavaPlugin {
         fileBoi.makeConfig();
         configuration = fileBoi.loadConfig();
         fileBoi.makeRenamer();
+        
+        new BukkitRunnable(){
+            char[] version = Bukkit.getVersion().toCharArray();
+            @Override
+            public void run() {
+                if(!updateNeeded)
+                {
+                    updater.update(version);
+                }
+            }
+        }.runTaskTimerAsynchronously(this, 0, configuration.secondsBetweenUpdates * 20L);
     }
 
     @Override
@@ -38,55 +52,75 @@ public final class Main extends JavaPlugin {
         getLogger().info("PaperAutoUpdate is no longer running.");
         if (updateNeeded) {
             fileBoi.runRenamer();
-        }
+        } 
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
-        if (cmd.getName().equalsIgnoreCase("update")) {
+        if (cmd.getName().equalsIgnoreCase("paperautoupdate")) {
 
-            if (sender instanceof Player && sender.hasPermission("paperautoupdate.update")) {
+            if (args[0] == "update" && sender instanceof Player && sender.hasPermission("paperautoupdate.update")) {
 
-                Bukkit.getLogger().info("Update has been called");
+                new BukkitRunnable(){
+                    char[] version = Bukkit.getVersion().toCharArray();
+                    @Override
+                    public void run() {
+                        updater.update(version);
+                    }
+                }.runTaskAsynchronously(this);
                 return true;
 
-            } else if (sender instanceof Player && !sender.hasPermission("paperautoupdate.update")) {
+            } else if (args[0] == "update" && sender instanceof Player && !sender.hasPermission("paperautoupdate.update")) {
 
-                Bukkit.getLogger().info(this.getCommand("update").getPermissionMessage());
+                sender.sendMessage(this.getCommand("update").getPermissionMessage());
                 return false;
 
-            } else {
+            } else if (args[0] == "update" && !(sender instanceof Player)) {
 
-                Bukkit.getLogger().info("Update has been called");
-                updater.update();
+                new BukkitRunnable(){
+                    char[] version = Bukkit.getVersion().toCharArray();
+                    @Override
+                    public void run() {
+                        updater.update(version);
+                    }
+                }.runTaskAsynchronously(this);
+                
                 return true;
-
+            } else {
+                if(sender instanceof Player)
+                {
+                    sender.sendMessage("Incorrect usage. Type /PaperAutoUpdate for help");
+                }
+                else {
+                    Bukkit.getLogger().info("/PaperAutoUpdate update: Updates the server on the next restart.");
+                }
             }
+        }
+        else if(cmd.getName().equalsIgnoreCase("paperautoupdate"))
+        {
+            Bukkit.getLogger().info("/PaperAutoUpdate update: Updates the server on the next restart.");
         }
         return false;
     }
-
 }
 
 class Updater {
 
-    void update() {
-
-        Bukkit.getLogger().info(Bukkit.getVersion());
+    //the version message of the server must be gotten outside of update for thread safety
+    void update(char[] versionRetrieved) {
 
         // find integer (version)
-        char[] version = Bukkit.getVersion().toCharArray();
         StringBuffer sb = new StringBuffer();
         Boolean hadDigit = false;
         int currentVersion;
         int latestVersion = 0;
 
-        for (int i = 0; i < version.length; i++) {
-            if (Character.isDigit(version[i])) {
+        for (int i = 0; i < versionRetrieved.length; i++) {
+            if (Character.isDigit(versionRetrieved[i])) {
                 hadDigit = true;
-                sb.append(version[i]);
-            } else if (!Character.isDigit(version[i]) && hadDigit) {
+                sb.append(versionRetrieved[i]);
+            } else if (!Character.isDigit(versionRetrieved[i]) && hadDigit) {
                 break;
             }
         }
@@ -104,7 +138,10 @@ class Updater {
             e.printStackTrace();
         }
 
+        Bukkit.getLogger().info("Your version is " + Integer.toString(currentVersion));
+
         if (latestVersion > currentVersion) {
+            Bukkit.getLogger().info("You are " + Integer.toString(latestVersion - currentVersion) + " versions behind. Update will apply on restart.");
             reader.downloadFile();
             Main.updateNeeded = true;
         } else {
@@ -130,8 +167,7 @@ class URLReader {
             content = scanner.next();
             scanner.close();
         } catch (Exception ex) {
-            Bukkit.getLogger()
-                    .warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
+            Bukkit.getLogger().warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
             ex.printStackTrace();
         }
 
@@ -140,7 +176,7 @@ class URLReader {
         try {
             json = (JSONObject) parser.parse(content);
         } catch (ParseException e1) {
-            Bukkit.getLogger().info("Something went wrong while parsing the JSON.");
+            Bukkit.getLogger().warning("Something went wrong while parsing the JSON.");
             e1.printStackTrace();
         }
 
@@ -158,8 +194,7 @@ class URLReader {
 
     public void downloadFile() {
         try {
-            BufferedInputStream in = new BufferedInputStream(
-                    new URL("https://papermc.io/api/v1/paper/1.15.2/latest/download").openStream());
+            BufferedInputStream in = new BufferedInputStream(new URL("https://papermc.io/api/v1/paper/1.15.2/latest/download").openStream());
             FileOutputStream fileOutputStream = new FileOutputStream("papernew.jar");
             byte dataBuffer[] = new byte[1024];
             int bytesRead;
@@ -186,7 +221,7 @@ class FileBoi {
             File renamer = new File("plugins\\paperautoupdate\\renamer.bat");
             renamer.createNewFile();
             FileWriter fw = new FileWriter(renamer);
-            fw.write("timeout /t 5 \n");
+            fw.write("timeout /t 10 \n");
             fw.write("xcopy \"" + config.pathToServer + "\\" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
             fw.write("del " + "\"" + config.pathToServer + "\\" + "papernew.jar\"\n");
             if(config.restartServer == "true")
@@ -205,6 +240,7 @@ class FileBoi {
 
     public void runRenamer() {
         try {
+            Main.updateNeeded = false;
             Runtime.getRuntime().exec("cmd /c start \"\" plugins\\paperautoupdate\\renamer.bat");
         } catch (IOException e) {
             e.printStackTrace();
@@ -217,21 +253,24 @@ class FileBoi {
     }
 
     public ConfigFile loadConfig() {
-        return new ConfigFile(plugin.getConfig().getString("PathToStartup"), plugin.getConfig().getString("PathToJar"), plugin.getConfig().getString("PathToServer"), plugin.getConfig().getString("RestartAfterUpdate"));
+        FileConfiguration fc = plugin.getConfig();
+        return new ConfigFile(fc.getString("PathToStartup"), fc.getString("PathToJar"), fc.getString("PathToServer"), fc.getString("RestartAfterUpdate"), fc.getInt("SecondsBetweenUpdateChecks"));
     }
 }
 
 class ConfigFile
 {
-    public ConfigFile(String start, String jar, String server, String restart)
+    public ConfigFile(String start, String jar, String server, String restart, int update)
     {
         pathToStart = start;
         pathToJar = jar;
         pathToServer = server;
         restartServer = restart;
+        secondsBetweenUpdates = update;
     }
     public String pathToStart;
     public String pathToJar;
     public String pathToServer;
     public String restartServer;
+    public int secondsBetweenUpdates;
 }
