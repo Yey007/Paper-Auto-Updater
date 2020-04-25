@@ -8,24 +8,21 @@ import org.bukkit.Bukkit;
 import com.destroystokyo.paper.util.VersionFetcher.DummyVersionFetcher;
 
 import java.net.*;
-import java.io.*;
 import java.util.*;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 
 public final class Main extends JavaPlugin {
 
     Updater updater = new Updater();
-    FileBoi fileBoi = new FileBoi();
+    ConfigFile configuration;
 
     @Override
     public void onEnable() {
         getLogger().info("PaperAutoUpdate is now running.");
-        fileBoi.CreateFiles();
+        makeConfig();
+        configuration = loadConfig();
     }
 
     @Override
@@ -52,12 +49,24 @@ public final class Main extends JavaPlugin {
 
                 Bukkit.getLogger().info("Update has been called");
                 updater.Update();
+                Bukkit.getLogger().info("Startup: " + configuration.pathToStart);
+                Bukkit.getLogger().info("Jar: " + configuration.pathToJar);
                 return true;
 
             }
         }
         return false;
     }
+
+    public void makeConfig() {
+        getConfig().options().copyDefaults(true);
+        saveConfig();
+    }
+    public ConfigFile loadConfig()
+    {
+        return new ConfigFile(getConfig().getString("PathToStartup"), getConfig().getString("PathToJar"));
+    }
+
 }
 
 class Updater {
@@ -124,87 +133,13 @@ class URLReader {
     }
 }
 
-class FileBoi {
-
-    File directory = new File("plugins\\PaperAutoUpdate");
-    File config = new File(directory, "config.yml");
-    File renamer = new File(directory, "renamer.bat");
-
-    public void CreateFiles() {
-
-        if (directory.exists() == false) {
-
-            try {
-                directory.mkdirs();
-            } catch (Exception e) {
-                Bukkit.getLogger().warning("Directory creation failed!");
-                e.printStackTrace();
-            }
-
-            try {
-                renamer.createNewFile();
-            } catch (IOException e) {
-                Bukkit.getLogger().warning("Renamer creation failed!");
-                e.printStackTrace();
-            }
-
-            try {
-                config.createNewFile();
-                WriteConfig();
-                Bukkit.getLogger().info(ReadConfig().PathToJar);
-                Bukkit.getLogger().info(ReadConfig().PathToStartup);
-            } catch (IOException e) {
-                Bukkit.getLogger().warning("Config creation failed!");
-                e.printStackTrace();
-            }
-
-        } else {
-
-            if (config.exists()) {
-                Bukkit.getLogger().info("Configuration file found!");
-            } else {
-                try {
-                    config.createNewFile();
-                    WriteConfig();
-                    Bukkit.getLogger().info(ReadConfig().PathToJar);
-                    Bukkit.getLogger().info(ReadConfig().PathToStartup);
-                } catch (IOException e) {
-                    Bukkit.getLogger().warning("Configuration file creation failed!");
-                    e.printStackTrace();
-                }
-            }
-
-            if (renamer.exists()) {
-                Bukkit.getLogger().info("Renamer script found!");
-            } else {
-                try {
-                    renamer.createNewFile();
-                } catch (IOException e) {
-                    Bukkit.getLogger().warning("Renamer script creation failed!");
-                    e.printStackTrace();
-                }
-            }
-
-        }
+class ConfigFile
+{
+    public ConfigFile(String start, String jar)
+    {
+        pathToStart = start;
+        pathToJar = jar;
     }
-
-    void WriteConfig() {
-        try {
-            FileWriter fw = new FileWriter(config);
-            fw.write("startupScriptPath: C:\\Server\\start.bat \n");
-            fw.write("serverJarFilePath: C:\\Server\\paper.jar \n");
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    ConfigFile ReadConfig() {
-        ConfigFile output = new ConfigFile();
-        Yaml yaml = new Yaml(new Constructor(ConfigFile.class));
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(config.getPath());
-        output = yaml.load(inputStream);
-        return output;
-    }
-
+    public String pathToStart;
+    public String pathToJar;
 }
