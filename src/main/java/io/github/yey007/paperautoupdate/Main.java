@@ -7,7 +7,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
@@ -19,17 +22,23 @@ public final class Main extends JavaPlugin {
 
     Updater updater = new Updater();
     ConfigFile configuration;
+    FileBoi fileBoi = new FileBoi(this);
+    public static Boolean updateNeeded = true;
 
     @Override
     public void onEnable() {
         getLogger().info("PaperAutoUpdate is now running.");
-        makeConfig();
-        configuration = loadConfig();
+        fileBoi.makeConfig();
+        configuration = fileBoi.loadConfig();
+        fileBoi.makeRenamer();
     }
 
     @Override
     public void onDisable() {
         getLogger().info("PaperAutoUpdate is no longer running.");
+        if (updateNeeded) {
+            fileBoi.runRenamer();
+        }
     }
 
     @Override
@@ -51,22 +60,11 @@ public final class Main extends JavaPlugin {
 
                 Bukkit.getLogger().info("Update has been called");
                 updater.update();
-                Bukkit.getLogger().info("Startup: " + configuration.pathToStart);
-                Bukkit.getLogger().info("Jar: " + configuration.pathToJar);
                 return true;
 
             }
         }
         return false;
-    }
-
-    public void makeConfig() {
-        getConfig().options().copyDefaults(true);
-        saveConfig();
-    }
-
-    public ConfigFile loadConfig() {
-        return new ConfigFile(getConfig().getString("PathToStartup"), getConfig().getString("PathToJar"));
     }
 
 }
@@ -108,9 +106,10 @@ class Updater {
 
         if (latestVersion > currentVersion) {
             reader.downloadFile();
-        }
-        else {
+            Main.updateNeeded = true;
+        } else {
             Bukkit.getLogger().info("You are on the newest version.");
+            Main.updateNeeded = false;
         }
     }
 }
@@ -131,7 +130,8 @@ class URLReader {
             content = scanner.next();
             scanner.close();
         } catch (Exception ex) {
-            Bukkit.getLogger().warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
+            Bukkit.getLogger()
+                    .warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
             ex.printStackTrace();
         }
 
@@ -155,28 +155,83 @@ class URLReader {
 
         return latestInt;
     }
+
     public void downloadFile() {
         try {
-            BufferedInputStream in = new BufferedInputStream(new URL("https://papermc.io/api/v1/paper/1.15.2/latest/download").openStream());
+            BufferedInputStream in = new BufferedInputStream(
+                    new URL("https://papermc.io/api/v1/paper/1.15.2/latest/download").openStream());
             FileOutputStream fileOutputStream = new FileOutputStream("papernew.jar");
             byte dataBuffer[] = new byte[1024];
             int bytesRead;
             while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
                 fileOutputStream.write(dataBuffer, 0, bytesRead);
             }
+            fileOutputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
 
+class FileBoi {
+    Main plugin;
+
+    public FileBoi(Main instance) {
+        plugin = instance;
+    }
+
+    public void makeRenamer() {
+        ConfigFile config = loadConfig();
+        try {
+            File renamer = new File("plugins\\paperautoupdate\\renamer.bat");
+            renamer.createNewFile();
+            FileWriter fw = new FileWriter(renamer);
+            fw.write("timeout /t 5 \n");
+            fw.write("xcopy \"" + config.pathToServer + "\\" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
+            fw.write("del " + "\"" + config.pathToServer + "\\" + "papernew.jar\"\n");
+            if(config.restartServer == "true")
+            {
+                fw.write("start \"\" \"" + config.pathToStart + "\"");
+            }
+            else if(config.restartServer == "jar")
+            {
+                fw.write("start javaw -jar \"" + config.pathToJar + "\"");
+            }
+            fw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void runRenamer() {
+        try {
+            Runtime.getRuntime().exec("cmd /c start \"\" plugins\\paperautoupdate\\renamer.bat");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void makeConfig() {
+        plugin.getConfig().options().copyDefaults(true);
+        plugin.saveConfig();
+    }
+
+    public ConfigFile loadConfig() {
+        return new ConfigFile(plugin.getConfig().getString("PathToStartup"), plugin.getConfig().getString("PathToJar"), plugin.getConfig().getString("PathToServer"), plugin.getConfig().getString("RestartAfterUpdate"));
+    }
+}
+
 class ConfigFile
 {
-    public ConfigFile(String start, String jar)
+    public ConfigFile(String start, String jar, String server, String restart)
     {
         pathToStart = start;
         pathToJar = jar;
+        pathToServer = server;
+        restartServer = restart;
     }
     public String pathToStart;
     public String pathToJar;
+    public String pathToServer;
+    public String restartServer;
 }
