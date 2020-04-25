@@ -5,13 +5,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
-import com.destroystokyo.paper.util.VersionFetcher.DummyVersionFetcher;
 
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.net.*;
 import java.util.*;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public final class Main extends JavaPlugin {
 
@@ -48,7 +50,7 @@ public final class Main extends JavaPlugin {
             } else {
 
                 Bukkit.getLogger().info("Update has been called");
-                updater.Update();
+                updater.update();
                 Bukkit.getLogger().info("Startup: " + configuration.pathToStart);
                 Bukkit.getLogger().info("Jar: " + configuration.pathToJar);
                 return true;
@@ -62,8 +64,8 @@ public final class Main extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
     }
-    public ConfigFile loadConfig()
-    {
+
+    public ConfigFile loadConfig() {
         return new ConfigFile(getConfig().getString("PathToStartup"), getConfig().getString("PathToJar"));
     }
 
@@ -71,17 +73,26 @@ public final class Main extends JavaPlugin {
 
 class Updater {
 
-    void Update() {
+    void update() {
 
-        DummyVersionFetcher fetcher = new DummyVersionFetcher();
-
-        Boolean behind = fetcher.getVersionMessage(Bukkit.getVersion()).contains("behind");
-        String behindString;
-        String versionMessage = fetcher.getVersionMessage(Bukkit.getVersion());
-        Bukkit.getLogger().info(Bukkit.getVersion().toString());
+        Bukkit.getLogger().info(Bukkit.getVersion());
 
         // find integer (version)
-        StringBuffer sb = new StringBuffer(versionMessage);
+        char[] version = Bukkit.getVersion().toCharArray();
+        StringBuffer sb = new StringBuffer();
+        Boolean hadDigit = false;
+        int currentVersion;
+        int latestVersion = 0;
+
+        for (int i = 0; i < version.length; i++) {
+            if (Character.isDigit(version[i])) {
+                hadDigit = true;
+                sb.append(version[i]);
+            } else if (!Character.isDigit(version[i]) && hadDigit) {
+                break;
+            }
+        }
+        currentVersion = Integer.parseInt(sb.toString());
 
         // get latest version
         URLReader reader = new URLReader();
@@ -89,16 +100,24 @@ class Updater {
         Bukkit.getLogger().info("Checking for new version...");
 
         try {
-            Bukkit.getLogger().info("Newest version is version " + Integer.toString(reader.ReadVersion()));
+            Bukkit.getLogger().info("Newest version is version " + Integer.toString(reader.readVersion()));
+            latestVersion = reader.readVersion();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if (latestVersion > currentVersion) {
+            reader.downloadFile();
+        }
+        else {
+            Bukkit.getLogger().info("You are on the newest version.");
         }
     }
 }
 
 class URLReader {
 
-    public int ReadVersion() throws Exception {
+    public int readVersion() {
 
         String content = null;
         URLConnection connection = null;
@@ -112,13 +131,18 @@ class URLReader {
             content = scanner.next();
             scanner.close();
         } catch (Exception ex) {
-            Bukkit.getLogger()
-                    .warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
+            Bukkit.getLogger().warning("Unable to connect to Paper (" + connection + ") in order to check latest version.");
             ex.printStackTrace();
         }
 
         JSONParser parser = new JSONParser();
-        JSONObject json = (JSONObject) parser.parse(content);
+        JSONObject json = new JSONObject();
+        try {
+            json = (JSONObject) parser.parse(content);
+        } catch (ParseException e1) {
+            Bukkit.getLogger().info("Something went wrong while parsing the JSON.");
+            e1.printStackTrace();
+        }
 
         try {
             Map builds = (Map) json.get("builds");
@@ -130,6 +154,19 @@ class URLReader {
         }
 
         return latestInt;
+    }
+    public void downloadFile() {
+        try {
+            BufferedInputStream in = new BufferedInputStream(new URL("https://papermc.io/api/v1/paper/1.15.2/latest/download").openStream());
+            FileOutputStream fileOutputStream = new FileOutputStream("papernew.jar");
+            byte dataBuffer[] = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                fileOutputStream.write(dataBuffer, 0, bytesRead);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 
