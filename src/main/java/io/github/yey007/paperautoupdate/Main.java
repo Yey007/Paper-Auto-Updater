@@ -159,9 +159,10 @@ class URLReader {
         URLConnection connection = null;
         int latestInt = 0;
 
-        System.setProperty("http.agent", "Mozilla/5.0");
+        System.setProperty("http.agent", "Chrome");
         try {
             connection = new URL("https://papermc.io/api/v1/paper/1.15.2").openConnection();
+            connection.addRequestProperty("User-Agent", "Chrome");
             Scanner scanner = new Scanner(connection.getInputStream());
             scanner.useDelimiter("\\Z");
             content = scanner.next();
