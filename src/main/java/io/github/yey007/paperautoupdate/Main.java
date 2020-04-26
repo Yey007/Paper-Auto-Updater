@@ -58,15 +58,10 @@ public final class Main extends JavaPlugin {
 
     public void registerCommands()
     {
-        List<String> aliases = new ArrayList<String>();
-        aliases.add("PaperAutoUpdate");
-        aliases.add("pau");
-
         CommandHandler handler = new CommandHandler();
         handler.register("paperautoupdate", new PaperAutoUpdate());
         handler.register("update", new Updater());
         getCommand("paperautoupdate").setExecutor(handler);
-        getCommand("paperautoupdate").setAliases(aliases);
     }
 
     public static Main getInstance(){
@@ -141,6 +136,7 @@ class PaperAutoUpdate implements CommandInterface {
 
         if (sender instanceof Player) {
             if (sender.hasPermission("paperautoupdate")) {
+                sender.sendMessage("Aliases: " + cmd.getAliases());
                 sender.sendMessage("/PaperAutoUpdate: All commands for PaperAutoUpdate");
                 sender.sendMessage("/PaperAutoUpdate update: Checks for a new version now and applies it on stop");
                 return true;
@@ -149,6 +145,7 @@ class PaperAutoUpdate implements CommandInterface {
                 return false;
             }
         } else {
+            Bukkit.getLogger().info("Aliases: " + cmd.getAliases());
             Bukkit.getLogger().info("/PaperAutoUpdate: All commands for PaperAutoUpdate");
             Bukkit.getLogger().info("/PaperAutoUpdate update: Checks for a new version now and applies it on stop");
             return true;

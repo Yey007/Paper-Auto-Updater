@@ -10,6 +10,7 @@ commands:
     usage: /paperautoupdate
     permission: paperautoupdate
     permission-message: You do not have the permission for paperautoupdate
+    aliases: [PaperAutoUpdate, pau, updater]
 permissions:
   paperautoupdate:
     description: Gives access to all auto update commands
