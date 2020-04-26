@@ -1,12 +1,12 @@
 package io.github.yey007.paperautoupdate;
 
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.Bukkit;
 
 import java.io.BufferedInputStream;
@@ -34,13 +34,14 @@ public final class Main extends JavaPlugin {
         fileBoi.makeConfig();
         configuration = fileBoi.loadConfig();
         fileBoi.makeRenamer();
-        
-        new BukkitRunnable(){
+        this.registerCommands();
+
+        new BukkitRunnable() {
             char[] version = Bukkit.getVersion().toCharArray();
+
             @Override
             public void run() {
-                if(!updateNeeded)
-                {
+                if (!updateNeeded) {
                     updater.update(version);
                 }
             }
@@ -52,60 +53,110 @@ public final class Main extends JavaPlugin {
         getLogger().info("PaperAutoUpdate is no longer running.");
         if (updateNeeded) {
             fileBoi.runRenamer();
-        } 
+        }
     }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    public void registerCommands()
+    {
+        List<String> aliases = new ArrayList<String>();
+        aliases.add("PaperAutoUpdate");
+        aliases.add("pau");
 
-        if (cmd.getName().equalsIgnoreCase("paperautoupdate")) {
+        CommandHandler handler = new CommandHandler();
+        handler.register("paperautoupdate", new PaperAutoUpdate());
+        handler.register("update", new Updater());
+        getCommand("paperautoupdate").setExecutor(handler);
+        getCommand("paperautoupdate").setAliases(aliases);
+    }
 
-            if (args[0] == "update" && sender instanceof Player && sender.hasPermission("paperautoupdate.update")) {
-
-                new BukkitRunnable(){
-                    char[] version = Bukkit.getVersion().toCharArray();
-                    @Override
-                    public void run() {
-                        updater.update(version);
-                    }
-                }.runTaskAsynchronously(this);
-                return true;
-
-            } else if (args[0] == "update" && sender instanceof Player && !sender.hasPermission("paperautoupdate.update")) {
-
-                sender.sendMessage(this.getCommand("update").getPermissionMessage());
-                return false;
-
-            } else if (args[0] == "update" && !(sender instanceof Player)) {
-
-                new BukkitRunnable(){
-                    char[] version = Bukkit.getVersion().toCharArray();
-                    @Override
-                    public void run() {
-                        updater.update(version);
-                    }
-                }.runTaskAsynchronously(this);
-                
-                return true;
-            } else {
-                if(sender instanceof Player)
-                {
-                    sender.sendMessage("Incorrect usage. Type /PaperAutoUpdate for help");
-                }
-                else {
-                    Bukkit.getLogger().info("/PaperAutoUpdate update: Updates the server on the next restart.");
-                }
-            }
-        }
-        else if(cmd.getName().equalsIgnoreCase("paperautoupdate"))
-        {
-            Bukkit.getLogger().info("/PaperAutoUpdate update: Updates the server on the next restart.");
-        }
-        return false;
+    public static Main getInstance(){
+        return (Main) Bukkit.getPluginManager().getPlugin("paperautoupdate");
     }
 }
 
-class Updater {
+interface CommandInterface {
+
+    // Every time I make a command, I will use this same method.
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args);
+}
+
+//Thank you to user AoH_Ruthless on the Bukkit forums for creating a tutorial on making sub-commands!
+class CommandHandler implements CommandExecutor {
+
+    private static HashMap<String, CommandInterface> commands = new HashMap<String, CommandInterface>();
+ 
+    //Register method. When we register commands in our onEnable() we will use this.
+    public void register(String name, CommandInterface cmd) {
+ 
+        //When we register the command, this is what actually will put the command in the hashmap.
+        commands.put(name, cmd);
+    }
+ 
+    //This will be used to check if a string exists or not.
+    public boolean exists(String name) {
+ 
+        //To actually check if the string exists, we will return the hashmap
+        return commands.containsKey(name);
+    }
+ 
+    //Getter method for the Executor.
+    public CommandInterface getExecutor(String name) {
+ 
+        //Returns a command in the hashmap of the same name.
+        return commands.get(name);
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
+        if(args.length == 0) {
+
+            getExecutor("paperautoupdate").onCommand(sender, command, label, args);
+            return true;
+
+        } else if(exists(args[0])) {
+
+            getExecutor(args[0]).onCommand(sender, command, label, args);
+            return true;
+
+        } else {
+
+            if(sender instanceof Player) {
+
+                sender.sendMessage("Invalid command.");
+                return false;
+            }
+            else {
+
+                Bukkit.getLogger().info("Invalid command.");
+                return false;
+            }
+        }
+    }
+}
+
+class PaperAutoUpdate implements CommandInterface {
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+
+        if (sender instanceof Player) {
+            if (sender.hasPermission("paperautoupdate")) {
+                sender.sendMessage("/PaperAutoUpdate: All commands for PaperAutoUpdate");
+                sender.sendMessage("/PaperAutoUpdate update: Checks for a new version now and applies it on stop");
+                return true;
+            } else {
+                sender.sendMessage("You do not have the permission for this command (" + cmd.getPermission() + ")");
+                return false;
+            }
+        } else {
+            Bukkit.getLogger().info("/PaperAutoUpdate: All commands for PaperAutoUpdate");
+            Bukkit.getLogger().info("/PaperAutoUpdate update: Checks for a new version now and applies it on stop");
+            return true;
+        }
+    }
+}
+
+class Updater implements CommandInterface{
 
     //the version message of the server must be gotten outside of update for thread safety
     void update(char[] versionRetrieved) {
@@ -147,6 +198,37 @@ class Updater {
         } else {
             Bukkit.getLogger().info("You are on the newest version.");
             Main.updateNeeded = false;
+        }
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+
+        if (sender instanceof Player) {
+            if (sender.hasPermission("paperautoupdate.update")) {
+                new BukkitRunnable() {
+                    char[] version = Bukkit.getVersion().toCharArray();
+
+                    @Override
+                    public void run() {
+                        update(version);
+                    }
+                }.runTaskAsynchronously(Main.getInstance());
+                return true;
+            } else {
+                sender.sendMessage("You do not have the permission for this command (paperautoupdate.update)");
+                return false;
+            }
+        } else {
+            new BukkitRunnable() {
+                char[] version = Bukkit.getVersion().toCharArray();
+
+                @Override
+                public void run() {
+                    update(version);
+                }
+            }.runTaskAsynchronously(Main.getInstance());
+            return true;
         }
     }
 }
