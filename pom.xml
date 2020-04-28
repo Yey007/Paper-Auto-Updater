@@ -25,8 +25,16 @@
     <connection>scm:git:git@github.com:Yey007/Paper-Auto-Updater.git</connection>
     <developerConnection>scm:git:git@github.com:Yey007/Paper-Auto-Updater.git</developerConnection>
     <url>https://github.com/Yey007/Paper-Auto-Updater.git</url>
-    <tag>1.2.6</tag>
+    <tag>@{project.version}</tag>
   </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>paperautoupdate</id>
+      <name>GitHub Yey007 Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/yey007/Paper-Auto-Updater</url>
+    </repository>
+ </distributionManagement>
 
   <dependencies>
     <dependency>
