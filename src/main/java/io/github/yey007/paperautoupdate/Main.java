@@ -297,33 +297,69 @@ class FileBoi {
 
     public void makeRenamer() {
         ConfigFile config = loadConfig();
-        try {
-            File renamer = new File("plugins\\paperautoupdate\\renamer.bat");
-            renamer.createNewFile();
-            FileWriter fw = new FileWriter(renamer);
-            fw.write("timeout /t 10 \n");
-            fw.write("xcopy \"" + config.pathToServer + "\\" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
-            fw.write("del " + "\"" + config.pathToServer + "\\" + "papernew.jar\"\n");
-            if(config.restartServer == "true")
-            {
-                fw.write("start \"\" \"" + config.pathToStart + "\"");
+        String os = System.getProperty("os.name");
+        Bukkit.getLogger().info(os);
+        if (os.contains("Windows")) {
+            try {
+                File renamer = new File("plugins\\paperautoupdate\\renamer.bat");
+                renamer.createNewFile();
+                FileWriter fw = new FileWriter(renamer);
+                fw.write("timeout /t 10 \n");
+                fw.write("xcopy \"" + config.pathToServer + "\\" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
+                fw.write("del " + "\"" + config.pathToServer + "\\" + "papernew.jar\"\n");
+                if (config.restartServer == "true") {
+                    fw.write("start \"\" \"" + config.pathToStart + "\"");
+                } else if (config.restartServer == "jar") {
+                    fw.write("start javaw -jar \"" + config.pathToJar + "\"");
+                }
+                fw.write("exit");
+                fw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            else if(config.restartServer == "jar")
-            {
-                fw.write("start javaw -jar \"" + config.pathToJar + "\"");
+        }
+        else if (os.contains("linux") || os.contains("mpe/ix") || os.contains("freebsd") || os.contains("irix")
+                || os.contains("digital unix") || os.contains("unix") || os.contains("mac os")) {
+
+            try {
+                File renamer = new File("plugins/paperautoupdate/renamer.sh");
+                renamer.createNewFile();
+                FileWriter fw = new FileWriter(renamer);
+                fw.write("#!/bin/bash");
+                fw.write("sleep 10 \n");
+                fw.write("mv \"" + config.pathToServer + "/" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
+                if (config.restartServer == "true") {
+                    fw.write("bash \"\" \"" + config.pathToStart + "\"");
+                } else if (config.restartServer == "jar") {
+                    fw.write("bash javaw -jar \"" + config.pathToJar + "\"");
+                }
+                fw.write("exit");
+                fw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            fw.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
     public void runRenamer() {
-        try {
-            Main.updateNeeded = false;
-            Runtime.getRuntime().exec("cmd /c start \"\" plugins\\paperautoupdate\\renamer.bat");
-        } catch (IOException e) {
-            e.printStackTrace();
+        String os = System.getProperty("os.name");
+        Bukkit.getLogger().info(os);
+        if (os.contains("Windows")) {
+            try {
+                Main.updateNeeded = false;
+                Runtime.getRuntime().exec("cmd /c start \"\" plugins\\paperautoupdate\\renamer.bat");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (os.contains("linux") || os.contains("mpe/ix") || os.contains("freebsd") || os.contains("irix")
+                || os.contains("digital unix") || os.contains("unix") || os.contains("mac os")) {
+
+            try {
+                Main.updateNeeded = false;
+                Runtime.getRuntime().exec("/bin/bash -c bash \"\" plugins/paperautoupdate/renamer.sh");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
