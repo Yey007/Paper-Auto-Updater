@@ -5,7 +5,7 @@
 
   <groupId>io.github.yey007</groupId>
   <artifactId>paperautoupdate</artifactId>
-  <version>1.2.6</version>
+  <version>1.2.6-SNAPSHOT</version>
 
   <name>paperautoupdate</name>
   <!-- FIXME change it to the project's website -->
@@ -25,7 +25,7 @@
     <connection>scm:git:git@github.com:Yey007/Paper-Auto-Updater.git</connection>
     <developerConnection>scm:git:git@github.com:Yey007/Paper-Auto-Updater.git</developerConnection>
     <url>https://github.com/Yey007/Paper-Auto-Updater.git</url>
-    <tag>1.2.6</tag>
+    <tag>${project.version}</tag>
   </scm>
 
   <dependencies>
@@ -104,17 +104,41 @@
               <source>1.8</source>
               <target>1.8</target>
           </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <configuration>
             <preparationGoals>package</preparationGoals>
             <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
             <tagNameFormat>@{project.version}</tagNameFormat>
             <remoteTagging>false</remoteTagging>
-        </configuration>
-    </plugin>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>3.0.0</version>
+          <configuration>
+              <archive>
+                  <manifest>
+                      <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                      <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                      <mainClass>io.github.yey007.paperautoupdate.Main</mainClass>
+                  </manifest>
+              </archive>
+              <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+          </configuration>
+          <executions>
+              <execution>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>single</goal>
+                  </goals>
+              </execution>
+          </executions>
+      </plugin>
       </plugins>
     </pluginManagement>
   </build>
