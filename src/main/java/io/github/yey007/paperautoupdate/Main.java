@@ -16,7 +16,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
+import com.google.gson.annotations.JsonAdapter;
+
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -37,12 +44,12 @@ public final class Main extends JavaPlugin {
         this.registerCommands();
 
         new BukkitRunnable() {
-            char[] version = Bukkit.getVersion().toCharArray();
+            String version = Bukkit.getVersion();
 
             @Override
             public void run() {
                 if (!updateNeeded) {
-                    updater.update(version);
+                    updater.update(version, null);
                 }
             }
         }.runTaskTimerAsynchronously(this, 0, configuration.secondsBetweenUpdates * 20L);
@@ -156,45 +163,70 @@ class PaperAutoUpdate implements CommandInterface {
 class Updater implements CommandInterface{
 
     //the version message of the server must be gotten outside of update for thread safety
-    void update(char[] versionRetrieved) {
+    void update(String versionMessage, String optionalDownloadVersion) {
 
-        // find integer (version)
+        // find version
         StringBuffer sb = new StringBuffer();
-        Boolean hadDigit = false;
-        int currentVersion;
-        int latestVersion = 0;
-
-        for (int i = 0; i < versionRetrieved.length; i++) {
-            if (Character.isDigit(versionRetrieved[i])) {
-                hadDigit = true;
-                sb.append(versionRetrieved[i]);
-            } else if (!Character.isDigit(versionRetrieved[i]) && hadDigit) {
-                break;
-            }
-        }
-        currentVersion = Integer.parseInt(sb.toString());
-
-        // get latest version
+        String currentMC = null;
+        String currentVersion = null;
+        String latestVersion = null;
         URLReader reader = new URLReader();
 
-        Bukkit.getLogger().info("Checking for new version...");
-
-        try {
-            Bukkit.getLogger().info("Newest version is version " + Integer.toString(reader.readVersion()));
-            latestVersion = reader.readVersion();
-        } catch (Exception e) {
-            e.printStackTrace();
+        Pattern pattern = Pattern.compile("[0-9]+.[0-9]+.[0-9]+");
+        Matcher matcher = pattern.matcher(versionMessage);
+        if (matcher.find())
+        {
+            currentMC = matcher.group();
         }
 
-        Bukkit.getLogger().info("Your version is " + Integer.toString(currentVersion));
+        if (optionalDownloadVersion == null || optionalDownloadVersion.isEmpty()) {
 
-        if (latestVersion > currentVersion) {
-            Bukkit.getLogger().info("You are " + Integer.toString(latestVersion - currentVersion) + " versions behind. Update will apply on restart.");
-            reader.downloadFile();
-            Main.updateNeeded = true;
-        } else {
-            Bukkit.getLogger().info("You are on the newest version.");
-            Main.updateNeeded = false;
+            pattern = Pattern.compile("[0-9]+");
+            matcher = pattern.matcher(versionMessage);
+            if (matcher.find())
+            {
+                currentVersion = matcher.group();
+            }
+
+            // get latest version
+            Bukkit.getLogger().info("Checking for new version...");
+
+            try {
+                Map builds = (Map) reader.readVersion(currentMC).get("builds");
+                latestVersion = (String) builds.get("latest");
+                Bukkit.getLogger().info("Newest version is version " + latestVersion);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            Bukkit.getLogger().info("Your version is " + currentVersion);
+
+            if (Integer.parseInt(latestVersion) > Integer.parseInt(currentVersion)) {
+                Bukkit.getLogger().info("You are " + Integer.toString(Integer.parseInt(latestVersion) - Integer.parseInt(currentVersion))
+                        + " versions behind. Update will apply on restart.");
+                reader.downloadFile(currentMC, latestVersion);
+                Main.updateNeeded = true;
+            } else {
+                Bukkit.getLogger().info("You are on the newest version.");
+                Main.updateNeeded = false;
+            }
+        }
+        else {
+            Bukkit.getLogger().info("Checking if version exists...");
+            Map<String, JSONArray> builds = (Map) reader.readVersion(currentMC).get("builds");
+            JSONArray all = (JSONArray) builds.get("all");
+            
+            if(all.contains(optionalDownloadVersion))
+            {
+                Bukkit.getLogger().info("Found that the version exists. Downloading...");
+                reader.downloadFile(currentMC, optionalDownloadVersion);
+                Main.updateNeeded = true;
+            }
+            else
+            {
+                Bukkit.getLogger().info("Version does not exists.");
+                Main.updateNeeded = false;
+            }
         }
     }
 
@@ -203,44 +235,68 @@ class Updater implements CommandInterface{
 
         if (sender instanceof Player) {
             if (sender.hasPermission("paperautoupdate.update")) {
-                new BukkitRunnable() {
-                    char[] version = Bukkit.getVersion().toCharArray();
+                if (args[1].isEmpty() || args[1] == null) {
+                    new BukkitRunnable() {
+                        String version = Bukkit.getVersion();
 
-                    @Override
-                    public void run() {
-                        update(version);
-                    }
-                }.runTaskAsynchronously(Main.getInstance());
-                return true;
+                        @Override
+                        public void run() {
+                            update(version, null);
+                        }
+                    }.runTaskAsynchronously(Main.getInstance());
+                    return true;
+                } else{
+                    new BukkitRunnable() {
+                        String version = Bukkit.getVersion();
+
+                        @Override
+                        public void run() {
+                            update(version, args[1]);
+                        }
+                    }.runTaskAsynchronously(Main.getInstance());
+                    return true;
+                }
             } else {
                 sender.sendMessage("You do not have the permission for this command (paperautoupdate.update)");
                 return false;
             }
         } else {
-            new BukkitRunnable() {
-                char[] version = Bukkit.getVersion().toCharArray();
+            if (args[1].isEmpty() || args[1] == null) {
+                new BukkitRunnable() {
+                    String version = Bukkit.getVersion();
 
-                @Override
-                public void run() {
-                    update(version);
-                }
-            }.runTaskAsynchronously(Main.getInstance());
-            return true;
+                    @Override
+                    public void run() {
+                        update(version, null);
+                    }
+                }.runTaskAsynchronously(Main.getInstance());
+                return true;
+            } else{
+                new BukkitRunnable() {
+                    String version = Bukkit.getVersion();
+
+                    @Override
+                    public void run() {
+                        update(version, args[1]);
+                    }
+                }.runTaskAsynchronously(Main.getInstance());
+                return true;
+            }
         }
     }
 }
 
 class URLReader {
 
-    public int readVersion() {
+    public JSONObject readVersion(String mcVersion) {
 
         String content = null;
         URLConnection connection = null;
-        int latestInt = 0;
+        String latest = null;
 
         System.setProperty("http.agent", "Chrome");
         try {
-            connection = new URL("https://papermc.io/api/v1/paper/1.15.2").openConnection();
+            connection = new URL("https://papermc.io/api/v1/paper/" + mcVersion).openConnection();
             connection.addRequestProperty("User-Agent", "Chrome");
             Scanner scanner = new Scanner(connection.getInputStream());
             scanner.useDelimiter("\\Z");
@@ -259,22 +315,12 @@ class URLReader {
             Bukkit.getLogger().warning("Something went wrong while parsing the JSON.");
             e1.printStackTrace();
         }
-
-        try {
-            Map builds = (Map) json.get("builds");
-            String latest = (String) builds.get("latest");
-            latestInt = Integer.parseInt(latest);
-        } catch (Exception e) {
-            Bukkit.getLogger().warning("Something went wrong while parsing a JSON");
-            e.printStackTrace();
-        }
-
-        return latestInt;
+        return json;
     }
 
-    public void downloadFile() {
+    public void downloadFile(String mcVersion, String downloadVersion) {
         try {
-            BufferedInputStream in = new BufferedInputStream(new URL("https://papermc.io/api/v1/paper/1.15.2/latest/download").openStream());
+            BufferedInputStream in = new BufferedInputStream(new URL("https://papermc.io/api/v1/paper/" + mcVersion + "/" + downloadVersion + "/download").openStream());
             FileOutputStream fileOutputStream = new FileOutputStream("papernew.jar");
             byte dataBuffer[] = new byte[1024];
             int bytesRead;
@@ -298,7 +344,6 @@ class FileBoi {
     public void makeRenamer() {
         ConfigFile config = loadConfig();
         String os = System.getProperty("os.name");
-        Bukkit.getLogger().info(os);
         if (os.contains("Windows")) {
             try {
                 File renamer = new File("plugins\\paperautoupdate\\renamer.bat");
@@ -308,9 +353,9 @@ class FileBoi {
                 fw.write("xcopy \"" + config.pathToServer + "\\" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
                 fw.write("del " + "\"" + config.pathToServer + "\\" + "papernew.jar\"\n");
                 if (config.restartServer == "true") {
-                    fw.write("start \"\" \"" + config.pathToStart + "\"");
+                    fw.write("start \"\" \"" + config.pathToStart + "\"\n");
                 } else if (config.restartServer == "jar") {
-                    fw.write("start javaw -jar \"" + config.pathToJar + "\"");
+                    fw.write("start javaw -jar \"" + config.pathToJar + "\"\n");
                 }
                 fw.write("exit");
                 fw.close();
@@ -329,9 +374,9 @@ class FileBoi {
                 fw.write("sleep 10 \n");
                 fw.write("mv \"" + config.pathToServer + "/" + "papernew.jar\" \"" + config.pathToJar + "\"" + "\n");
                 if (config.restartServer == "true") {
-                    fw.write("bash \"\" \"" + config.pathToStart + "\"");
+                    fw.write("bash \"\" \"" + config.pathToStart + "\"\n");
                 } else if (config.restartServer == "jar") {
-                    fw.write("bash javaw -jar \"" + config.pathToJar + "\"");
+                    fw.write("bash javaw -jar \"" + config.pathToJar + "\"\n");
                 }
                 fw.write("exit");
                 fw.close();
