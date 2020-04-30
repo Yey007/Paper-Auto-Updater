@@ -6,14 +6,18 @@ Basically, it generates  .bat or .sh script based on your OS and parameters you 
 in order to replace the old paper.jar with the new one it downloaded while the server was running. And then it's done! Everything is
 up to date and running again.
 
-#config.yml
+
+# config.yml
 This is the config file. You *must* replace the default values with your own before your first update, or else it will not work.
 
 PathToStartup: The absolute path to your startup script. If you don't have a separate startup script, leave this blank.
+
 PathToJar: The absolute path to your paper.jar or paperclip.jar.
+
 PathToServer: The absolute path to the folder your server is in.
-RestartAfterUpdate: true if you want to restart the server after it updates, false if not. If you left PathToStartup blank, set this to jar.
-If you set this as true or jar, *always* use the stop command and not restart.
+
+RestartAfterUpdate: true if you want to restart the server after it updates, false if not. If you left PathToStartup blank, set this to jar. If you set this as true or jar, *always* use the stop command and not restart.
 SecondsBetweenUpdateChecks: The amount of seconds between update checks. Don't set this too low. Anything above 20 is probably safe.
+
 
 Thanks for reading! If you find any issues, you can open an issue here.
