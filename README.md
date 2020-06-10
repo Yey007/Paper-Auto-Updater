@@ -17,7 +17,9 @@ PathToJar: The absolute path to your paper.jar or paperclip.jar.
 PathToServer: The absolute path to the folder your server is in.
 
 RestartAfterUpdate: true if you want to restart the server after it updates, false if not. If you left PathToStartup blank, set this to jar. If you set this as true or jar, *always* use the stop command and not restart.
+
 SecondsBetweenUpdateChecks: The amount of seconds between update checks. Don't set this too low. Anything above 20 is probably safe.
+Edit: I have been told that papermc.io runs cloudflare on their API sites, and for some reason have it set to detecting automated requests? Due to this, frequent access may get your requests blocked. It's best to only check every couple of days to avoid 403 errors.
 
 
 Thanks for reading! If you find any issues, you can open an issue here.
