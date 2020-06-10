@@ -235,7 +235,7 @@ class Updater implements CommandInterface{
 
         if (sender instanceof Player) {
             if (sender.hasPermission("paperautoupdate.update")) {
-                if (args[1].isEmpty() || args[1] == null) {
+                if (args.length < 2 || args[1].isEmpty() || args[1] == null) {
                     new BukkitRunnable() {
                         String version = Bukkit.getVersion();
 
@@ -261,7 +261,7 @@ class Updater implements CommandInterface{
                 return false;
             }
         } else {
-            if (args[1].isEmpty() || args[1] == null) {
+            if (args.length < 2 || args[1].isEmpty() || args[1] == null) {
                 new BukkitRunnable() {
                     String version = Bukkit.getVersion();
 
@@ -297,7 +297,7 @@ class URLReader {
         System.setProperty("http.agent", "Chrome");
         try {
             connection = new URL("https://papermc.io/api/v1/paper/" + mcVersion).openConnection();
-            connection.addRequestProperty("User-Agent", "Chrome");
+            connection.addRequestProperty("User-Agent", "PaperAutoUpdater");
             Scanner scanner = new Scanner(connection.getInputStream());
             scanner.useDelimiter("\\Z");
             content = scanner.next();
