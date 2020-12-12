@@ -1,3 +1,6 @@
+# IMPORTANT #
+This project is no longer maintained. Use at your own risk. An auto updater likely isn't a good idea unless you have full trust in bug free builds anyways. 
+
 # Paper-Auto-Updater
 A plugin that automatically update paper.jar when there is a new version.
 
